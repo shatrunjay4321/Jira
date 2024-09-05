@@ -1,0 +1,45 @@
+.container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  width: 100vw;
+  height: 100vh;
+  overflow: scroll;
+}
+
+.display_none {
+  display: none;
+}
+
+.card_container {
+  display: flex;
+  border: solid 1px #000;
+  height: 300px;
+  padding: 20px;
+  margin: 20px;
+  border-radius: 10px;
+}
+
+.left_card {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+.right_card {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+button {
+  background-color: #fff;
+  border: solid 1px #6b6b6b;
+  margin: 10px 5px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+ul {
+  list-style: none;
+}
