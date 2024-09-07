@@ -5,117 +5,82 @@ import Card from './Card.js';
 function App() {
   const [cards, setCards] = useState([]);
 
-  const cardsLength = cards.length;
-
   useEffect(() => {
-    if(cards.length === 0) {
-      const arr = [...Array(3).keys()].map((_, idx) => {
-        return {id: idx + 1, totalArray: []}
-      });
-      setCards(arr);
-    }
-  }, [cards.length])
-
-  const handleAdd = (card = {}, inputValue) => {
-    if(inputValue.trim()) {
-      const {id, totalArray = []} = card || {};
-      const newCards = cards.map((item) => {
-        if(item.id === id) {
-          totalArray.push({id: Date.now(), value: inputValue});
-        } else {
-          return item;
-        }
-        return {id, totalArray};
-      })
+    if (cards.length === 0) {
+      const newCards = [...Array(3)].map((_, idx) => ({
+        id: idx + 1,
+        totalArray: [],
+      }));
       setCards(newCards);
     }
+  }, [cards]);
+  
+
+  const updateCards = (index, updatedCard) => {
+    setCards((prevCards) => prevCards.map((item, idx) => (idx === index ? updatedCard : item)));
   };
 
-  const handlePrevClick = (card, index) => {
-    const prevCard = cards[index-1];
-    const selectedArray = card?.totalArray?.filter((item) => item?.status === true);
-    const newCurrentTotalArray = card?.totalArray?.filter((item) => !item?.status);
-    const newSelectedArray = selectedArray?.map((item) => ({...item, status: false}));
-
-    const updatedPrevCard = {...prevCard, totalArray: [...prevCard?.totalArray, ...newSelectedArray]};
-    const updatedCurrCard = {...card, totalArray: newCurrentTotalArray};
-    console.log("updatedCurrCard:", updatedCurrCard)
-    const newCards = cards.map((item, idx) => {
-      if(index === idx) {
-        return updatedCurrCard;
-      } else if(index-1 === idx) {
-        return updatedPrevCard;
-      }
-      return item;
-    });
-    setCards(newCards);
+  const handleAdd = (card, inputValue) => {
+    if (!inputValue.trim()) return;
+    const updatedCard = { ...card, totalArray: [...card.totalArray, { id: Date.now(), value: inputValue }] };
+    updateCards(cards.indexOf(card), updatedCard);
   };
 
-  const handleNextClick = (card, index) => {
-    const nextCard = cards[index+1];
-    const selectedArray = card?.totalArray?.filter((item) => item?.status === true);
-    const newCurrentTotalArray = card?.totalArray?.filter((item) => !item?.status);
-    const newSelectedArray = selectedArray?.map((item) => ({...item, status: false}));
+  const handleCardTransfer = (fromIndex, toIndex) => {
+    const fromCard = cards[fromIndex];
+    const toCard = cards[toIndex];
+    const selectedItems = fromCard.totalArray.filter((item) => item.status);
+    if (selectedItems.length === 0) return;
 
-    const updatedNextCard = {...nextCard, totalArray: [...nextCard?.totalArray, ...newSelectedArray]};
-    const updatedCurrCard = {...card, totalArray: newCurrentTotalArray};
-    const newCards = cards.map((item, idx) => {
-      if(index === idx) {
-        return updatedCurrCard;
-      } else if(index+1 === idx) {
-        return updatedNextCard;
-      }
-      return item;
-    });
-    setCards(newCards);
+    const updatedFromCard = {
+      ...fromCard,
+      totalArray: fromCard.totalArray.filter((item) => !item.status),
+    };
+    const updatedToCard = {
+      ...toCard,
+      totalArray: [...toCard.totalArray, ...selectedItems.map((item) => ({ ...item, status: false }))],
+    };
+
+    setCards((prevCards) =>
+      prevCards.map((item, idx) => (idx === fromIndex ? updatedFromCard : idx === toIndex ? updatedToCard : item))
+    );
   };
 
-  const handleCheck = (card, item) => {
-    const {id: cardId, totalArray: cardTotalArray = []} = card || {};
-    const {id: itemId, status} = item || {};
-
-    const newCards = cards.map((cardItem) => {
-      if(cardItem?.id === cardId) {
-        const newCardItem = cardItem?.totalArray?.map((cardList) => {
-          if(cardList?.id === itemId) {
-            return {...cardList, status: !status}
-          } else {
-            return cardList;
-          }
-        })
-        return {...cardItem, totalArray: newCardItem};
-      } else {
-        return cardItem;
-      }
-    })
-    setCards(newCards);
-  }
+  const handleCheck = (card, itemId) => {
+    const updatedCard = {
+      ...card,
+      totalArray: card.totalArray.map((item) =>
+        item.id === itemId ? { ...item, status: !item.status } : item
+      ),
+    };
+    updateCards(cards.indexOf(card), updatedCard);
+  };
 
   const handleSelectAll = (card, setSelectAll) => {
-    const newCard = card?.totalArray?.map((item) => ({...item, status: !item?.status}));
-    const newCards = cards?.map((item) => {
-      if(item?.id === card?.id) {
-        return {...item, totalArray: newCard};
-      }
-      return item;
-    })
-    setCards(newCards);
-    setSelectAll((prev) => !prev);
-  }
+    const allSelected = card.totalArray.some((item) => !item.status);
+    const updatedCard = {
+      ...card,
+      totalArray: card.totalArray.map((item) => ({ ...item, status: allSelected })),
+    };
+    updateCards(cards.indexOf(card), updatedCard);
+    setSelectAll(allSelected);
+  };
 
   return (
     <div className="container">
-      {(cards || []).map((card, idx) => <Card 
+      {cards.map((card, idx) => (
+        <Card
           key={card.id}
           index={idx}
-          isLastIndex={idx === cardsLength-1}
-          card={card} 
-          handleAdd={handleAdd} 
-          handlePrevClick={handlePrevClick}
-          handleNextClick={handleNextClick}
+          card={card}
+          isLastIndex={idx === cards.length - 1}
+          handleAdd={handleAdd}
+          handlePrevClick={() => handleCardTransfer(idx, idx - 1)}
+          handleNextClick={() => handleCardTransfer(idx, idx + 1)}
           handleCheck={handleCheck}
           handleSelectAll={handleSelectAll}
-      />)}
+        />
+      ))}
     </div>
   );
 }

@@ -1,77 +1,60 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
-function Card ({
-    card = {},
-    index,
-    isLastIndex = false,
-    handleAdd = () => {},
-    handleCheck = () => {},
-    handlePrevClick = () => {},
-    handleNextClick = () => {},
-    handleSelectAll = () => {}
-}) {
-    const {id, totalArray = []} = card || {};
-    const [inputValue, setinputValue] = useState('');
-    const [selectAll, setSelectAll] = useState(false);
+function Card({ card, handleAdd, handleCheck, handlePrevClick, handleNextClick, handleSelectAll, isLastIndex }) {
+  const [inputValue, setInputValue] = useState('');
+  const [selectAll, setSelectAll] = useState(false);
 
-    const findSelectedArrayLength = () => {
-        return totalArray?.reduce((acc, val) => {
-            if(val?.status) {
-                acc++;
-            }
-            return acc;
-        }, 0);
-    };
+  const selectedCount = useMemo(() => card.totalArray.filter((item) => item.status).length, [card.totalArray]);
 
-    return (
-        <div className="card_container">
-            <div className="left_card">
-                <div className="input_list_div">
-                    <input 
-                        type="text" 
-                        placeholder="Add stuff" 
-                        value={inputValue} 
-                        onChange={(e) => setinputValue(e.target.value)} 
-                    />
-                    <button onClick={() => {
-                        handleAdd(card, inputValue);
-                        setinputValue("");
-                    }}>Add</button>
-                </div>
-                <div className="stats_div">{findSelectedArrayLength()}/{totalArray.length} Selected</div>
-                <button 
-                    onClick={() => handleSelectAll(card, setSelectAll)}
-                    disabled={!totalArray.length}
-                >{selectAll ? "Deselect All" : "Select All"}</button>
-                <div className="list_container">
-                    <ul>
-                        {totalArray?.map((item) => {
-                            return (
-                                <div key={item?.id}>
-                                    <input 
-                                        type="checkbox"
-                                        value={item?.status}
-                                        onChange={() => handleCheck(card, item)}
-                                    />
-                                    {item?.value}
-                                </div>
-                        )
-                        })}
-                    </ul>
-                </div>
-            </div>
-            <div className="right_card"> 
-                <button 
-                    onClick={() => handlePrevClick(card, index)} 
-                    className={`${!index ? "display_none" : ""}`}
-                >{`<`}</button>
-                <button 
-                    onClick={() => handleNextClick(card, index)} 
-                    className={`${isLastIndex ? "display_none" : ""}`}
-                >{`>`}</button>
-            </div>
+  return (
+    <div className="card_container">
+      <div className="left_card">
+        <div className="input_list_div">
+          <input
+            type="text"
+            placeholder="Add stuff"
+            value={inputValue}
+            autoFocus
+            onChange={(e) => setInputValue(e.target.value)}
+          />
+          <button 
+            onClick={() => { handleAdd(card, inputValue); setInputValue(''); }}
+          >Add</button>
         </div>
-    )
+        <div className="stats_div">{selectedCount}/{card.totalArray.length} Selected</div>
+        <button 
+            onClick={() => handleSelectAll(card, setSelectAll)} 
+            disabled={!card.totalArray.length}
+        >
+          {selectAll ? "Deselect All" : "Select All"}
+        </button>
+        <div className="list_container">
+          <ul>
+            {card.totalArray.map((item) => (
+              <li key={item.id}>
+                <input 
+                    type="checkbox" 
+                    checked={item.status} 
+                    onChange={() => handleCheck(card, item.id)} 
+                />
+                {item.value}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <div className="right_card">
+        <button onClick={() => {
+            handlePrevClick();
+            setSelectAll(false);
+        }} className={!card.id ? "display_none" : ""}>{`<`}</button>
+        <button onClick={() => {
+            handleNextClick();
+            setSelectAll(false);
+        }} className={isLastIndex ? "display_none" : ""}>{`>`}</button>
+      </div>
+    </div>
+  );
 }
 
 export default Card;
